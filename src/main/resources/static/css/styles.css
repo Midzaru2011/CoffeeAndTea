@@ -1,0 +1,234 @@
+/* Общие стили для страницы */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #4CAF50; /* Зеленый цвет заголовка */
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex; /* Используем Flexbox */
+    justify-content: space-between; /* Распределяем элементы по ширине */
+    align-items: center; /* Выравниваем элементы по центру по вертикали */
+    gap: 20px;
+}
+
+button {
+    background-color: #4CAF50; /* Зеленая кнопка */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049; /* Темно-зеленый при наведении */
+    transform: scale(1.1); /* Увеличение кнопки при наведении */
+}
+
+button.clicked {
+    background-color: #f44336; /* Красный цвет после нажатия */
+    color: white;
+}
+
+.price {
+    display: flex;
+    align-items: left; /* Выравниваем по центру */
+    gap: 5px; /* Добавляем небольшой отступ между ценой и "руб." */
+}
+
+.price span {
+    text-align: center; /* Центрируем текст */
+}
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center; /* Центрируем текст в ячейках */
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9; /* Чередование цветов строк */
+}
+
+tr:hover {
+    background-color: #f1f1f1; /* Эффект при наведении */
+}
+
+/* Кнопка "Удалить" */
+button[style*="background-color: #f44336"] {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button[style*="background-color: #f44336"]:hover {
+    background-color: #d32f2f; /* Темно-красный при наведении */
+}
+
+/* Стили для списка заказов */
+.order-list {
+    list-style-type: none; /* Убираем маркеры списка */
+    padding: 0;
+    margin: 0;
+}
+
+.order-list li {
+    display: flex; /* Используем Flexbox для выравнивания */
+    align-items: center; /* Выравниваем элементы по вертикали */
+    justify-content: space-between; /* Распределяем пространство между элементами */
+    padding: 10px 0; /* Отступы сверху и снизу */
+    border-bottom: 1px solid #ddd; /* Линия между элементами */
+}
+
+.coffee-name {
+    flex: 1; /* Название занимает доступное пространство */
+}
+
+.coffee-price {
+    width: 100px; /* Фиксированная ширина для цены */
+    text-align: right; /* Выравниваем текст по правому краю */
+    margin-right: 20px; /* Отступ справа */
+    font-weight: bold; /* Жирный шрифт для цены */
+    color: #497; /* Цвет текста (по желанию) */
+}
+
+.remove-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.remove-button:hover {
+    background-color: #d32f2f;
+}
+
+/* Стили для изображений напитков */
+.coffee-image {
+    width: 50px; /* Фиксированная ширина */
+    height: 50px; /* Фиксированная высота */
+    object-fit: cover; /* Сохраняет пропорции изображения */
+    border-radius: 5px; /* Закругленные углы */
+    margin-right: 10px; /* Отступ справа */
+}
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center; /* Центрируем текст в ячейках */
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9; /* Чередование цветов строк */
+}
+
+tr:hover {
+    background-color: #f1f1f1; /* Эффект при наведении */
+}
+
+/* Стили для поля "Итого" */
+.total {
+    margin-top: 20px; /* Отступ сверху */
+    font-size: 1.2em; /* Размер шрифта как у заголовка "Ваш заказ" */
+    font-weight: bold; /* Жирный шрифт */
+    text-align: left; /* Выравнивание по левому краю */
+    opacity: 0;
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Стили для ссылки "Вернуться в меню" */
+.back-to-menu {
+    display: inline-block; /* Отображаем как блок */
+    margin-top: 10px; /* Отступ сверху */
+    padding: 10px 20px; /* Внутренние отступы */
+    background-color: #4CAF50; /* Зеленый фон */
+    color: white; /* Белый текст */
+    text-decoration: none; /* Убираем подчеркивание */
+    border-radius: 5px; /* Закругленные углы */
+    font-size: 1em; /* Размер шрифта */
+    transition: background-color 0.3s ease; /* Плавный переход */
+}
+
+.back-to-menu:hover {
+    background-color: #45a049; /* Темно-зеленый при наведении */
+}
+
+.logout-link {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #f44336;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+.logout-link:hover {
+    background-color: #d32f2f;
+}
+
+.auth-info {
+    text-align: center; /* Центрирование содержимого по горизонтали */
+    margin-top: 10px; /* Отступ сверху */
+    font-size: 18px; /* Размер шрифта */
+}
+
+.auth-info p {
+    margin: 0; /* Убираем отступы вокруг параграфа */
+    font-weight: bold; /* Жирный шрифт для всего текста */
+}
+
+.auth-info span {
+    font-style: italic; /* Курсив для имени пользователя */
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Меню кофейни</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- Подключение JavaScript -->
+    <script th:src="@{/js/scripts.js}" type="text/javascript"></script>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<!-- Добавляем блок для отображения информации о пользователе и ссылки на выход -->
+<div th:if="${#authentication != null and #authentication.isAuthenticated()}" class="auth-info">
+    <p><strong>Вы вошли как </strong> <span th:text="${#authentication.name}"></span>.</p>
+    <button id="logout-button" class="logout-button">Выйти</button>
+</div>
+<div th:if="${#authentication == null or not #authentication.isAuthenticated()}">
+    <p>Вы зарегистрированы.</p>
+    <a href="/login" class="login-link">Войти</a>
+</div>
+<h1>Доступные напитки</h1>
+<!-- Таблица с напитками -->
+<table>
+    <thead>
+    <tr>
+        <th>Напиток</th>
+        <th>Название</th>
+        <th>Цена</th>
+        <th>Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="coffee : ${coffees}">
+        <td>
+            <img th:src="${coffee.imageUrl}" alt="Изображение напитка" class="coffee-image">
+        </td>
+        <td th:text="${coffee.name}"></td>
+        <td>
+            <span th:text="${coffee.price}"></span> руб.
+        </td>
+        <td>
+            <form th:action="@{/add}" method="post" style="display:inline;">
+                <input type="hidden" name="coffeeName" th:value="${coffee.name}">
+                <button type="submit" class="add-button">Добавить</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<h2>Текущий заказ</h2>
+<ul class="order-list">
+    <li th:each="coffee : ${order.coffees}">
+        <span class="coffee-name" th:text="${coffee.name}"></span>
+        <span class="coffee-price" th:text="${coffee.price} + ' руб.'"></span>
+        <form th:action="@{/remove}" method="post" style="display:inline;">
+            <input type="hidden" name="coffeeName" th:value="${coffee.name}">
+            <button type="submit" class="remove-button">Удалить</button>
+        </form>
+    </li>
+</ul>
+<p>Общая стоимость: <span th:text="${order.total}"></span> руб.</p>
+<form th:action="@{/checkout}" method="post">
+    <div th:if="${message}" style="color: green; font-weight: bold;">
+        <p th:text="${message}"></p>
+    </div>
+    <button type="submit">Оформить заказ</button>
+</form>
+</body>
+</html>

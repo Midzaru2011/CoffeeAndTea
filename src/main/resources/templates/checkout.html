@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Заказ оформлен</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<h1>Спасибо за заказ!</h1>
+<h2>Ваш заказ:</h2>
+
+<!-- Таблица с заказанными напитками -->
+<table>
+    <thead>
+    <tr>
+        <th>Напиток</th>
+        <th>Цена</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="coffee : ${order.coffees}">
+        <td th:text="${coffee.name}"></td>
+        <td>
+            <span th:text="${coffee.price}"></span> руб.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Поле "Итого" -->
+<div class="total">
+    <strong>Итого: <span th:text="${order.total}"></span> руб.</strong>
+</div>
+<div th:if="${message}" style="color: green; font-weight: bold;">
+    <p th:text="${message}"></p>
+</div>
+<a href="/?clearOrder=true" class="back-to-menu">Вернуться в меню</a>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Выход из системы</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<h1>Подтверждение выхода</h1>
+<p>Вы уверены, что хотите выйти из системы?</p>
+<form th:action="@{/logout}" method="post">
+  <button type="submit">Да, выйти</button>
+</form>
+<a href="/" class="cancel-link">Отмена</a>
+
+<!-- Стилизация ссылки "Отмена" -->
+<style>
+  .cancel-link {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #ccc;
+      color: black;
+      text-decoration: none;
+      border-radius: 5px;
+  }
+  .cancel-link:hover {
+      background-color: #aaa;
+  }
+</style>
+</body>
+</html>
