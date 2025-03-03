@@ -5,3 +5,4 @@ import ru.intf.sasha.model.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 }
+//
