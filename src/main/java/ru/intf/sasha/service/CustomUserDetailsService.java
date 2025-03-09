@@ -1,5 +1,6 @@
 package ru.intf.sasha.service;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,11 +17,11 @@ import java.util.stream.Collectors;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    //private final RoleRepository roleRepository;
 
     public CustomUserDetailsService(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        //this.roleRepository = roleRepository;
     }
 
     @Override
@@ -29,14 +30,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
         // Преобразуем роли в формат Spring Security
-        Set<org.springframework.security.core.GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toSet());
+//        Set<org.springframework.security.core.GrantedAuthority> authorities = user.getRoles().stream()
+//                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName()))
+//                .collect(Collectors.toSet());
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                user.getPassword(),
-                authorities
+                user.getPassword(), // Пароль должен быть в формате BCrypt
+                user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                        .collect(Collectors.toList())
         );
     }
 }

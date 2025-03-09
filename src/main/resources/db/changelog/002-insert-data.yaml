@@ -1,0 +1,54 @@
+# Файл: db/changelog/002-insert-data.yaml
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: your_name
+      changes:
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_ADMIN
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_USER
+        - insert:
+            tableName: app_user
+            columns:
+              - column:
+                  name: username
+                  value: admina
+              - column:
+                  name: password
+                  value: $2a$12$wuobyRSGWfYL88hCqsQNK.wwyr4OeY1KklGK9cliGoITuAxpv.oVK
+        - insert:
+            tableName: app_user
+            columns:
+              - column:
+                  name: username
+                  value: user
+              - column:
+                  name: password
+                  value: $2a$12$wuobyRSGWfYL88hCqsQNK.wwyr4OeY1KklGK9cliGoITuAxpv.oVK
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  valueComputed: (SELECT id FROM app_user WHERE username = 'admina')
+              - column:
+                  name: role_id
+                  valueComputed: (SELECT id FROM role WHERE name = 'ROLE_ADMIN')
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  valueComputed: (SELECT id FROM app_user WHERE username = 'user')
+              - column:
+                  name: role_id
+                  valueComputed: (SELECT id FROM role WHERE name = 'ROLE_USER')

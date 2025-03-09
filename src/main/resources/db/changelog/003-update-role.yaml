@@ -1,0 +1,13 @@
+# db/changelog/006-update-role.yaml
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: your_name
+      changes:
+        - update:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: ROLE_SUPER_USER
+            where: name = 'ROLE_USER'

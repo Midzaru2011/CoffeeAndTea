@@ -2,6 +2,7 @@ package ru.intf.sasha.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -24,57 +25,43 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationSuccessHandler successHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/**").hasRole("ADMIN") // Доступ только для администраторов
-                        .requestMatchers("/user/**").hasRole("USER")   // Доступ только для обычных пользователей
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER")
                         .requestMatchers("/login", "/css/**", "/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
-        //        http
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers( "/login", "/css/**", "/images/**").permitAll() // Разрешаем доступ к главной странице и статическим ресурсам
-//                        //.requestMatchers("/checkout").permitAll()
-//                        .anyRequest().authenticated() // Все остальные запросы НЕ требуют авторизации
-//                )
                 .formLogin(form -> form
-                        .loginPage("/login") // Страница для входа
-                        .successHandler(successHandler)
-                        .defaultSuccessUrl("/") // Перенаправление после успешного входа
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/")
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout") // URL для обработки выхода
-                        .logoutSuccessUrl("/login?logout") // Перенаправление после выхода
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .permitAll()
-//                )
-//                .logout(LogoutConfigurer::permitAll
-                );
-//                .logout(LogoutConfigurer::permitAll // Разрешаем выход из системы
-//                );
+                )
+                .authenticationProvider(daoAuthenticationProvider());// Добавляем провайдера
+                //.csrf(csrf -> csrf.disable()); // Для тестирования
+
         return http.build();
     }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        // Создаем пользователя в памяти
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("admin")
-//                .password("admin")
-//                .roles("USER")
-//                .build();
-//        return new InMemoryUserDetailsManager(user);
-//    }
 }
