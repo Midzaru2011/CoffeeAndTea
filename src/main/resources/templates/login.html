@@ -3,27 +3,35 @@
 <head>
     <title>Вход в систему</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.body.className = "login-page";
+        /*]]>*/
+    </script>
 </head>
-<body>
-<h2>Войдите в систему</h2>
-<form th:action="@{/login}" method="post">
-    <div>
-        <label for="username">Имя пользователя:</label>
-        <input type="text" id="username" name="username" required>
+<body class="login-page">
+    <div class="auth-container">
+        <img src="/images/logo.png" alt="Логотип" class="logo">
+        <form th:action="@{/login}" method="post" class="auth-form">
+            <h2>Войдите в систему</h2>
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="submit-btn">Войти</button>
+            </div>
+            <div th:if="${param.error}" class="alert alert-error">
+                Неверное имя пользователя или пароль.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                Вы успешно вышли из системы.
+            </div>
+        </form>
     </div>
-    <div>
-        <label for="password">Пароль:</label>
-        <input type="password" id="password" name="password" required>
-    </div>
-    <div>
-        <button type="submit">Войти</button>
-    </div>
-    <div th:if="${param.error}">
-        <p style="color: red;">Неверное имя пользователя или пароль.</p>
-    </div>
-    <div th:if="${param.logout}">
-        <p style="color: green;">Вы успешно вышли из системы.</p>
-    </div>
-</form>
 </body>
 </html>
