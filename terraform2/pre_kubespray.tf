@@ -13,11 +13,6 @@ all:
       ip: ${yandex_compute_instance.cluster.1.network_interface[0].ip_address}
       access_ip: ${yandex_compute_instance.cluster.1.network_interface[0].ip_address}
       ansible_user: ubuntu
-    node2:
-      ansible_host: ${yandex_compute_instance.cluster.2.network_interface[0].nat_ip_address}
-      ip: ${yandex_compute_instance.cluster.2.network_interface[0].ip_address}
-      access_ip: ${yandex_compute_instance.cluster.2.network_interface[0].ip_address}
-      ansible_user: ubuntu
   children:
     kube_control_plane:
       hosts:
@@ -25,7 +20,6 @@ all:
     kube_node:
       hosts:
         node1:
-        node2:
     etcd:
       hosts:
         node0:
@@ -36,5 +30,9 @@ all:
     calico_rr:
       hosts: {}  
       DOC
-  filename = "/home/zag1988/kubespray/inventory/mycluster/hosts.yaml"
+  filename = "/home/zag1988/CoffeeAndTea/kubespray/inventory/mycluster/hosts.yaml"
+}
+
+data "external" "update_yaml" {
+  program = ["python3", "${path.module}/update_k8s_cluster_yaml.py", "/home/zag1988/CoffeeAndTea/kubespray/inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml", yandex_compute_instance.cluster[0].network_interface.0.nat_ip_address]
 }

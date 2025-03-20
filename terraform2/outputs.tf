@@ -9,8 +9,8 @@ output "cluster_nat_IP" {
 #   value = "http://${yandex_storage_bucket.vp-bucket.bucket_domain_name}"
 # }
 
-output "connection_string" {
-  description = "Full connection string for the PostgreSQL database"
-  value       = "postgresql://sasha:password@${yandex_compute_instance.postgres.network_interface[0].nat_ip_address}:5432/CoffeeAndTea"
-  sensitive   = true # Скрывает значение при выводе
-}
+# output "connection_string" {
+#   description = "Full connection string for the PostgreSQL database"
+#   value       = "postgresql://sasha:password@${yandex_compute_instance.postgres.network_interface[0].nat_ip_address}:5432/CoffeeAndTea"
+#   sensitive   = true # Скрывает значение при выводе
+# }
