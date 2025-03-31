@@ -36,5 +36,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ***/coffee-and-tea-app:${{ env.version }}
-            ***/coffee-and-tea-app:latest
+            coffee-and-tea-app:${{ env.version }}
+            coffee-and-tea-app:latest
