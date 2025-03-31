@@ -3,7 +3,7 @@ name: Build and Push Docker Image with Semantic Versioning
 on:
   push:
     branches:
-      - main # или другая ветка, на которой вы хотите запускать сборку
+      - master # или другая ветка, на которой вы хотите запускать сборку
     tags:
       - 'v*' # Дополнительно можно добавить триггер на Git tags (например, v1.0.0)
 
