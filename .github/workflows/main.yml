@@ -19,7 +19,7 @@ jobs:
       # Шаг 2: Чтение версии из файла VERSION
       - name: Read version from file
         id: version
-        run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
+        run: echo "version=$(cat VERSION | tr -d '[:space:]')" >> $GITHUB_ENV
 
       # Шаг 3: Логин в Docker Hub
       - name: Log in to Docker Hub
@@ -36,5 +36,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            midzaru2011/coffee-and-tea-app:v${{ env.version }} # Тег с версией
-            midzaru2011/coffee-and-tea-app:latest # Опционально: тег latest
+            ***/coffee-and-tea-app:v${{ env.version }}
+            ***/coffee-and-tea-app:latest
