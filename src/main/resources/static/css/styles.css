@@ -296,3 +296,23 @@ tr:hover {
 .submit-btn:hover {
     background-color: #218838;
 }
+
+/* Стиль для футера */
+footer {
+    position: fixed; /* Фиксированное положение на странице */
+    bottom: 0;       /* Прижимаем к нижней части экрана */
+    right: 0;        /* Прижимаем к правой части экрана */
+    padding: 10px;   /* Отступы внутри футера */
+    z-index: 1000;   /* Убедитесь, что футер поверх других элементов */
+}
+
+/* Стиль для блока с версией */
+.version-info {
+    background-color: green; /* Зелёный фон */
+    color: white;            /* Белый текст */
+    padding: 8px 16px;       /* Внутренние отступы */
+    border-radius: 4px;      /* Скругление углов */
+    font-size: 14px;         /* Размер шрифта */
+    font-family: Arial, sans-serif; /* Шрифт */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Тень для эффекта объёма */
+}
