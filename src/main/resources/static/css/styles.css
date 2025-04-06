@@ -315,4 +315,15 @@ footer {
     font-size: 14px;         /* Размер шрифта */
     font-family: Arial, sans-serif; /* Шрифт */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Тень для эффекта объёма */
+/*    animation: fadeIn 1s ease-in-out; /*анимация для версии
 }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}*/

@@ -66,10 +66,6 @@
     </div>
     <button type="submit">Оформить заказ</button>
 </form>
-<footer>
-    <div class="version-info">
-        Версия приложения: <span th:text="${version}"></span>
-    </div>
-</footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
