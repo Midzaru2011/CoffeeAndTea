@@ -15,10 +15,10 @@ FROM eclipse-temurin:17-jre-alpine
 # RUN apt-get update && apt-get install -y liquibase  # Опционально
 
 # Копируем собранный JAR из первого этапа
-COPY --from=build /app/target/CoffeAndTea-0.0.1-SNAPSHOT.jar /CoffeAndTea-0.0.1-SNAPSHOT.jar
+COPY --from=build /app/target/*.jar /CoffeAndTea.jar
 
 # Указываем порт, который будет открыт в контейнере
 EXPOSE 8081
 
 # Запускаем приложение
-ENTRYPOINT ["java", "-jar", "/CoffeAndTea-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/CoffeAndTea.jar"]
