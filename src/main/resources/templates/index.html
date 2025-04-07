@@ -26,6 +26,7 @@
     <tr>
         <th>Напиток</th>
         <th>Название</th>
+        <th>Описание</th> <!-- Добавьте заголовок для описания -->
         <th>Цена</th>
         <th>Действие</th>
     </tr>
@@ -36,6 +37,7 @@
             <img th:src="${coffee.imageUrl}" alt="Изображение напитка" class="coffee-image">
         </td>
         <td th:text="${coffee.name}"></td>
+        <td th:text="${coffee.description}"></td> <!-- Отобразите описание -->
         <td>
             <span th:text="${coffee.price}"></span> руб.
         </td>
@@ -50,11 +52,12 @@
 </table>
 <h2>Текущий заказ</h2>
 <ul class="order-list">
-    <li th:each="coffee : ${order.coffees}">
-        <span class="coffee-name" th:text="${coffee.name}"></span>
-        <span class="coffee-price" th:text="${coffee.price} + ' руб.'"></span>
+    <li th:each="entry : ${order.coffeesWithCounts}">
+        <span class="coffee-name" th:text="${entry.key.name}"></span>
+        <span class="coffee-quantity">Количество: <span th:text="${entry.value}"></span></span>
+        <span class="coffee-price" th:text="${entry.key.price} + ' руб.'"></span>
         <form th:action="@{/remove}" method="post" style="display:inline;">
-            <input type="hidden" name="coffeeName" th:value="${coffee.name}">
+            <input type="hidden" name="coffeeName" th:value="${entry.key.name}">
             <button type="submit" class="remove-button">Удалить</button>
         </form>
     </li>

@@ -13,26 +13,36 @@
     <thead>
     <tr>
         <th>Напиток</th>
-        <th>Цена</th>
+        <th>Цена за единицу</th>
+        <th>Количество</th>
+        <th>Общая стоимость</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="coffee : ${order.coffees}">
-        <td th:text="${coffee.name}"></td>
-        <td>
-            <span th:text="${coffee.price}"></span> руб.
-        </td>
+    <!-- Проходим по всем напиткам с их количеством -->
+    <tr th:each="entry : ${order.coffeesWithCounts}">
+        <td th:text="${entry.key.name}"></td> <!-- Название напитка -->
+        <td><span th:text="${entry.key.price}"></span> руб.</td> <!-- Цена за единицу -->
+        <td th:text="${entry.value}"></td> <!-- Количество -->
+        <td><span th:text="${entry.key.price * entry.value}"></span> руб.</td> <!-- Общая стоимость -->
     </tr>
     </tbody>
 </table>
+
 <!-- Поле "Итого" -->
 <div class="total">
     <strong>Итого: <span th:text="${order.total}"></span> руб.</strong>
 </div>
+
+<!-- Сообщение (если есть) -->
 <div th:if="${message}" style="color: green; font-weight: bold;">
     <p th:text="${message}"></p>
 </div>
+
+<!-- Ссылка для возврата в меню -->
 <a href="/?clearOrder=true" class="back-to-menu">Вернуться в меню</a>
-<div th:replace="fragments/footer :: footer"></div>
+
+<!-- Футер -->
+<div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

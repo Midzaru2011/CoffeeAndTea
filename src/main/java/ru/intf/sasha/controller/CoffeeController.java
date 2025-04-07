@@ -1,8 +1,6 @@
 package ru.intf.sasha.controller;
 
 import org.springframework.security.core.Authentication;
-import ru.intf.sasha.model.Coffee;
-import ru.intf.sasha.model.Order;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,10 +8,21 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
+import java.util.Map;
+
+import ru.intf.sasha.model.Coffee;
+import ru.intf.sasha.model.Order;
+import ru.intf.sasha.service.CoffeeService;
 
 @Controller
 @SessionAttributes("order")
 public class CoffeeController {
+
+    private final CoffeeService coffeeService;
+
+    public CoffeeController(CoffeeService coffeeService) {
+        this.coffeeService = coffeeService;
+    }
 
     @ModelAttribute("order")
     public Order getOrder() {
@@ -33,13 +42,13 @@ public class CoffeeController {
         } else {
             model.addAttribute("username", "Гость");
         }
-        model.addAttribute("coffees", getAvailableCoffees());
+        model.addAttribute("coffees", coffeeService.getAllCoffees()); // Получаем напитки из БД
         return "index";
     }
 
     @PostMapping("/add")
     public String addCoffee(@RequestParam String coffeeName, Model model) {
-        Coffee coffee = getCoffeeByName(coffeeName);
+        Coffee coffee = coffeeService.getCoffeeByName(coffeeName); // Находим напиток по имени
         if (coffee != null) {
             Order order = (Order) model.getAttribute("order");
             order.addCoffee(coffee);
@@ -49,26 +58,44 @@ public class CoffeeController {
 
     @PostMapping("/checkout")
     public String checkout(Model model) {
+        // Получаем текущий заказ из модели
         Order order = (Order) model.getAttribute("order");
-        model.addAttribute("order", order);
+
+        // Формируем детали заказа
         StringBuilder orderDetails = new StringBuilder();
         orderDetails.append("Заказ оформлен ")
                 .append(LocalDateTime.now())
                 .append(":\n");
-        for (Coffee coffee : order.getCoffees()) {
+
+        // Проходим по всем напиткам с их количеством
+        assert order != null;
+        for (Map.Entry<Coffee, Integer> entry : order.getCoffeesWithCounts().entrySet()) {
+            Coffee coffee = entry.getKey();
+            int quantity = entry.getValue();
+
             orderDetails.append("- ")
                     .append(coffee.getName())
                     .append(" (")
                     .append(coffee.getPrice())
-                    .append(" руб.)\n");
+                    .append(" руб.) x ")
+                    .append(quantity) // Добавляем количество
+                    .append(" = ")
+                    .append(coffee.getPrice() * quantity) // Стоимость за все единицы
+                    .append(" руб.\n");
         }
+
         orderDetails.append("Общая стоимость: ")
                 .append(order.getTotal())
                 .append(" руб.");
 
+        // Логируем детали заказа
         logger.info(orderDetails.toString());
-        // Очищаем заказ после рендеринга страницы
-        //clearOrder(model);
+
+        // Передаем данные в модель для отображения на странице
+        model.addAttribute("orderDetails", orderDetails.toString());
+
+        // Очищаем заказ после оформления
+//        clearOrder(model);
 
         return "checkout";
     }
@@ -80,37 +107,11 @@ public class CoffeeController {
         return "redirect:/";
     }
 
-//    @GetMapping("/")
-//    public String home(Model model, Authentication authentication) {
-//        if (authentication != null && authentication.isAuthenticated()) {
-//            model.addAttribute("username", authentication.getName());
-//        } else {
-//            model.addAttribute("username", "Гость");
-//        }
-//        return "index";
-//    }
     private void clearOrder(Model model) {
         Order order = (Order) model.getAttribute("order");
         order.clear(); // Добавьте метод clear() в класс Order для очистки заказа
         model.addAttribute("order", order);
     }
 
-    private Coffee[] getAvailableCoffees() {
-        return new Coffee[]{
-                new Coffee("Эспрессо", 120, "/images/espresso.jpg"),
-                new Coffee("Латте", 150, "/images/latte.jpg"),
-                new Coffee("Капучино", 140, "/images/cappuccino.jpg"),
-                new Coffee("Американо", 100, "/images/americano.jpg")
-        };
-    }
     private static final Logger logger = LoggerFactory.getLogger(CoffeeController.class);
-
-    private Coffee getCoffeeByName(String name) {
-        for (Coffee coffee : getAvailableCoffees()) {
-            if (coffee.getName().equals(name)) {
-                return coffee;
-            }
-        }
-        return null;
-    }
 }
