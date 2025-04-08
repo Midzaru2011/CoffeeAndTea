@@ -53,6 +53,33 @@ databaseChangeLog:
                   type: BIGINT
                   constraints:
                     nullable: false
+        - createTable:
+            tableName: coffee
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: price
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: image_url
+                  type: VARCHAR(255)
         - addForeignKeyConstraint:
             baseTableCatalogName: public
             baseTableName: user_roles

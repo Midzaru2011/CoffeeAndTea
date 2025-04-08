@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-coffees
+      author: your-name
+      changes:
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Мокка
+              - column:
+                  name: description
+                  value: Кофе с шоколадом и молоком
+              - column:
+                  name: price
+                  value: 160
+              - column:
+                  name: image_url
+                  value: /images/mocha.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Раф
+              - column:
+                  name: description
+                  value: Кофейный напиток с сливками
+              - column:
+                  name: price
+                  value: 180
+              - column:
+                  name: image_url
+                  value: /images/raf.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Американо
+              - column:
+                  name: description
+                  value: Кофе из отборных сортов арабики
+              - column:
+                  name: price
+                  value: 120
+              - column:
+                  name: image_url
+                  value: /images/americano.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Капучино
+              - column:
+                  name: description
+                  value: Кофейный напиток на основе эспрессо
+              - column:
+                  name: price
+                  value: 120
+              - column:
+                  name: image_url
+                  value: /images/cappuccino.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Эспрессо
+              - column:
+                  name: description
+                  value: Кофейный напиток
+              - column:
+                  name: price
+                  value: 80
+              - column:
+                  name: image_url
+                  value: /images/espresso.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Латте
+              - column:
+                  name: description
+                  value: Кофейный напиток на основе молока и эспрессо
+              - column:
+                  name: price
+                  value: 120
+              - column:
+                  name: image_url
+                  value: /images/latte.jpg
+        - insert:
+            tableName: coffee
+            columns:
+              - column:
+                  name: name
+                  value: Зеленый чай
+              - column:
+                  name: description
+                  value: Индийский зеленый чай
+              - column:
+                  name: price
+                  value: 110
+              - column:
+                  name: image_url
+                  value: /images/green-tea.jpg

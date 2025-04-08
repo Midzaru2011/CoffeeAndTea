@@ -2,6 +2,8 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
+    background-size: cover; /* Растянуть фон на всю страницу */
+    background-repeat: no-repeat; /* Запретить повторение фона */
     color: #333;
     margin: 0;
     padding: 0;
@@ -225,6 +227,7 @@ tr:hover {
     height: 100vh;
     margin: 0;
     background-color: #f0f2f5;
+    background-image: url('/images/background.jpg');
 }
 
 .auth-container {
@@ -300,19 +303,25 @@ tr:hover {
 /* Стиль для футера */
 footer {
     position: fixed; /* Фиксированное положение на странице */
-    bottom: 0;       /* Прижимаем к нижней части экрана */
+    top: 0;          /* Прижимаем к верхней части экрана */
     right: 0;        /* Прижимаем к правой части экрана */
-    padding: 10px;   /* Отступы внутри футера */
+    padding: 5px 10px; /* Уменьшаем отступы внутри футера */
+    font-size: 10px; /* Уменьшаем размер текста */
+    line-height: 1.2; /* Уменьшаем межстрочный интервал */
+    background-color: #f8f9fa; /* Цвет фона (например, светло-серый) */
+    border: 1px solid #ddd; /* Добавляем рамку для отделения */
+    border-radius: 5px; /* Скругляем углы */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Добавляем легкую тень */
     z-index: 1000;   /* Убедитесь, что футер поверх других элементов */
+    transform: translateX(-10px); /* Сдвигаем немного влево для лучшего визуального эффекта */
 }
-
 /* Стиль для блока с версией */
 .version-info {
     background-color: green; /* Зелёный фон */
     color: white;            /* Белый текст */
     padding: 8px 16px;       /* Внутренние отступы */
     border-radius: 4px;      /* Скругление углов */
-    font-size: 14px;         /* Размер шрифта */
+    font-size: 10px;         /* Размер шрифта */
     font-family: Arial, sans-serif; /* Шрифт */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Тень для эффекта объёма */
 /*    animation: fadeIn 1s ease-in-out; /*анимация для версии

@@ -14,12 +14,16 @@ public class CoffeeService {
     public CoffeeService(CoffeeRepository coffeeRepository) {
         this.coffeeRepository = coffeeRepository;
     }
-
+    // Получить все напитки
     public List<Coffee> getAllCoffees() {
         return coffeeRepository.findAll();
     }
-
+    // Найти напиток по имени
     public Coffee getCoffeeByName(String name) {
         return coffeeRepository.findByName(name).orElse(null);
+    }
+    // Добавить новый напиток
+    public Coffee addCoffee(Coffee coffee) {
+        return coffeeRepository.save(coffee);
     }
 }
