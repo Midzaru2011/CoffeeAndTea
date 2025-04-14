@@ -14,3 +14,6 @@ output "cluster_nat_IP" {
 #   value       = "postgresql://sasha:password@${yandex_compute_instance.postgres.network_interface[0].nat_ip_address}:5432/CoffeeAndTea"
 #   sensitive   = true # Скрывает значение при выводе
 # }
+output "postgres_public_ip" {
+  value = yandex_compute_instance.postgres.network_interface[0].nat_ip_address
+}
