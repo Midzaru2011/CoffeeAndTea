@@ -85,7 +85,7 @@ resource "yandex_compute_instance" "jenkins" {
       "sudo sh /home/ubuntu/jenkins-install.sh",
       # Копирование Groovy-скриптов в директорию Jenkins
       "sudo mkdir -p /var/lib/jenkins/init.groovy.d/",
-      # "sudo mv /tmp/install-plugins.groovy /var/lib/jenkins/init.groovy.d/install-plugins.groovy",
+      "sudo mv /tmp/install-plugins.groovy /var/lib/jenkins/init.groovy.d/install-plugins.groovy",
       "sudo mv /tmp/create-docker-agent.groovy /var/lib/jenkins/init.groovy.d/create-docker-agent.groovy",
       # Перезапуск Jenkins для выполнения Groovy-скриптов
       "sudo systemctl restart jenkins",
