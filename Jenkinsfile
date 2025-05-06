@@ -19,7 +19,7 @@ pipeline {
         
         stage('Checkout') {
             steps {
-                git branch: 'main',
+                git branch: 'master',
                 credentialsId: env.GITHUB_CREDENTIALS,
                 url: 'https://github.com/Midzaru2011/CoffeeAndTea.git'
             }
