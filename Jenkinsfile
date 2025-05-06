@@ -29,12 +29,6 @@ pipeline {
             }
         }
 
-        stage('Build with Maven') {
-            steps {
-                sh 'mvn clean install'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -52,14 +46,12 @@ pipeline {
                 }
             }
         }
+        
     }
 
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed.'
+        always {
+            cleanWs() // Очищает workspace
         }
     }
 }
