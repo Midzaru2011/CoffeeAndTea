@@ -5,6 +5,7 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-creds') // Учетные данные Docker Hub
         IMAGE_NAME = 'midzaru2011/coffeeandtea'     // Имя образа в Docker Hub
         IMAGE_TAG = "v${BUILD_NUMBER}"                          // Тег образа
+        GITHUB_CREDENTIALS = 'github-credentials'
     }
 
     stages {
@@ -18,7 +19,8 @@ pipeline {
         
         stage('Checkout') {
             steps {
-                git branch: 'main', 
+                git branch: 'main',
+                credentialsId: env.GITHUB_CREDENTIALS,
                 url: 'https://github.com/Midzaru2011/CoffeeAndTea.git'
             }
         }
