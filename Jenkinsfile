@@ -8,9 +8,18 @@ pipeline {
     }
 
     stages {
+
+        stage('Delete workspace') {
+            steps {
+                echo 'Deleting workspace'
+                deleteDir()
+            }
+        }
+        
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Midzaru2011/CoffeeAndTea.git'
+                git branch: 'main', 
+                url: 'https://github.com/Midzaru2011/CoffeeAndTea.git'
             }
         }
 
