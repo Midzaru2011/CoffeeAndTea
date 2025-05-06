@@ -8,6 +8,10 @@ pipeline {
         GITHUB_CREDENTIALS = 'github-credentials'
     }
 
+    tools {
+        maven 'Maven-3.9.9' // Указываете имя конфигурации Maven из Global Tool Configuration
+    }
+
     stages {
 
         stage('Delete workspace') {
