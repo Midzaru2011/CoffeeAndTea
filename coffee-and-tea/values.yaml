@@ -7,7 +7,7 @@ springDatasource:
 postgresPassword: ""
 
 # Настройки Deployment
-replicaCount: 3
+replicaCount: 2
 image:
   repository: midzaru2011/coffee-and-tea-app
   tag: "2.0.1"
