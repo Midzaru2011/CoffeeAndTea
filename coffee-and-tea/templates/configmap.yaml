@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  SPRING_DATASOURCE_URL: {{ .Values.springDatasource.url }}
+  SPRING_DATASOURCE_USERNAME: {{ .Values.springDatasource.username }}
