@@ -4,7 +4,7 @@ springDatasource:
   username: "sasha"
 
 # Настройки Secret
-postgresPassword: "password"
+postgresPassword: ""
 
 # Настройки Deployment
 replicaCount: 3
