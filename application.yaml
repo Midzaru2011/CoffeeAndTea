@@ -12,6 +12,9 @@ spec:
     helm:
       valueFiles:
         - values.yaml
+    parameters:
+      - name: postgresPassword
+        value: your password
   destination:
     server: https://kubernetes.default.svc 
     namespace: argocd
