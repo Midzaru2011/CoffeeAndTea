@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class LoginController {
@@ -32,5 +33,9 @@ public class LoginController {
             // Возвращаем ошибку при неверных данных
             return ResponseEntity.status(401).body("Invalid username or password");
         }
+    }
+    @GetMapping("/test")
+    public String test(HttpServletRequest request) {
+        return "Scheme: " + request.getScheme() + ", Secure: " + request.isSecure();
     }
 }
