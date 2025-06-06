@@ -14,3 +14,11 @@
   -name tomcat \
   -out keystore.p12 \
   -password pass:
+
+  keytool -importkeystore \
+        -deststorepass  \
+        -destkeypass  \
+        -destkeystore keystore.jks \
+        -srckeystore keystore.p12 \
+        -srcstoretype PKCS12 \
+        -srcstorepass 
