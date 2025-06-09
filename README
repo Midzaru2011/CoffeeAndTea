@@ -22,3 +22,5 @@
         -srckeystore keystore.p12 \
         -srcstoretype PKCS12 \
         -srcstorepass 
+- добавлена конфигурация для прокси на 443 порт через Nginx www.coffeeandteamenu.ru
+- добавлена конфигурация systemd unit и sh script для запуска приложения start.sh и coffeeandteamenu.service

@@ -36,3 +36,11 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Java keystores
+*.jks
+*.p12
+*.pkcs12
+*.keystore
+
+/logs
