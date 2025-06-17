@@ -5,7 +5,7 @@ resource "yandex_compute_instance" "cluster" {
   zone                      = "${var.subnet-zone[count.index]}"
   hostname                  = "node-${count.index}"
   allow_stopping_for_update = true
-  platform_id = "standard-v2"
+  platform_id = "standard-v3"
   labels = {
     index = "${count.index}"
   }

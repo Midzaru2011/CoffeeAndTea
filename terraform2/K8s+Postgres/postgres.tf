@@ -3,7 +3,7 @@ resource "yandex_compute_instance" "postgres" {
   zone                      = var.subnet-zone[0] # Используем первую зону доступности
   hostname                  = "postgres-node"
   allow_stopping_for_update = true
-  platform_id               = "standard-v2"
+  platform_id               = "standard-v3"
 
   scheduling_policy {
     preemptible = true # Прерываемая ВМ
