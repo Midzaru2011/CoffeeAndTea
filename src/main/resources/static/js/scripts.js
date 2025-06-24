@@ -1,6 +1,8 @@
+console.log("scripts.js загружен!");
 document.addEventListener("DOMContentLoaded", function () {
     // Добавляем класс "clicked" для кнопок "Добавить"
     const addButtons = document.querySelectorAll(".add-button");
+
     addButtons.forEach(button => {
         button.addEventListener("click", function () {
             this.classList.add("clicked"); // Добавляем класс "clicked"
@@ -14,22 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Предотвращаем стандартное поведение
             const csrfToken = document.querySelector('meta[name="_csrf"]').content;
             const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-//
-//            let csrfToken = null;
-//            let csrfHeader = null;
-//            if (csrfMetaToken && csrfMetaToken.content) {
-//                csrfToken = csrfMetaToken.content;
-//            }
-//
-//            if (csrfMetaHeader && csrfMetaHeader.content) {
-//                csrfHeader = csrfMetaHeader.content;
-//            }
-//
-//            // Если CSRF-токен не найден, показываем сообщение об ошибке
-//            if (!csrfToken || !csrfHeader) {
-//                alert("CSRF-токен не найден. Пожалуйста, перезагрузите страницу.");
-//                return;
-//            }
+
             // Показываем подтверждение перед выходом
             if (confirm("Вы уверены, что хотите выйти?")) {
                 // Отправляем POST-запрос на /logout
@@ -53,6 +40,47 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert("Произошла ошибка. Пожалуйста, попробуйте позже.");
                 });
             }
+        });
+    }
+    const coffeeInput = document.getElementById("coffee_name");
+    const infoButton = document.getElementById("get-info-btn");
+    const coffeeDetails = document.getElementById("coffee-details");
+    console.log("Coffee Input:", coffeeInput);
+    console.log("Info Button:", infoButton);
+    console.log("Coffee Details:", coffeeDetails);
+    if (infoButton && coffeeInput && coffeeDetails) {
+        infoButton.addEventListener("click", function () {
+            console.log("Кнопка 'Узнать подробности' нажата");
+            const name = coffeeInput.value.trim();
+            if (!name) {
+                coffeeDetails.textContent = "Пожалуйста, введите название кофе.";
+                coffeeDetails.style.backgroundColor = "#fff3cd";
+                coffeeDetails.style.borderLeftColor = "#ffc107";
+                return;
+            }
+
+            coffeeDetails.textContent = "Загрузка информации...";
+            coffeeDetails.style.backgroundColor = "#e3f2fd";
+            coffeeDetails.style.borderLeftColor = "#2196f3";
+
+            fetch(`/api/coffees/info/${encodeURIComponent(name)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Ошибка сети или неизвестный кофе");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    coffeeDetails.textContent = data;
+                    coffeeDetails.style.backgroundColor = "#e8f5e9";
+                    coffeeDetails.style.borderLeftColor = "#4CAF50";
+                })
+                .catch(err => {
+                    coffeeDetails.textContent = "Не удалось получить информацию. Попробуйте позже.";
+                    coffeeDetails.style.backgroundColor = "#ffebee";
+                    coffeeDetails.style.borderLeftColor = "#f44336";
+                    console.error("Ошибка:", err);
+                });
         });
     }
 });
