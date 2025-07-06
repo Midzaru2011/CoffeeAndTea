@@ -1,0 +1,245 @@
+# Production configuration example for Coffee and Tea application
+
+# Application scaling for production
+replicaCount: 3
+
+image:
+  repository: midzaru2011/coffeeandtea
+  tag: "2.1.2"
+  pullPolicy: IfNotPresent
+
+# Production resource limits
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+# Enable autoscaling in production
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+
+# Production-grade PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "secure-admin-password"
+    username: "coffee_user"
+    password: "secure-user-password"
+    database: "CoffeeAndTea"
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+      storageClass: "fast-ssd"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    extendedConfiguration: |
+      max_connections = 500
+      shared_buffers = 1GB
+      effective_cache_size = 2GB
+      maintenance_work_mem = 512MB
+      wal_buffers = 64MB
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+    pgHbaConfiguration: |
+      host all all 0.0.0.0/0 md5
+      host replication all 0.0.0.0/0 md5
+
+# Production Kafka configuration
+kafka:
+  enabled: true
+  controller:
+    replicaCount: 3
+  broker:
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  logRetentionHours: 168
+  defaultReplicationFactor: 3
+  offsetsTopicReplicationFactor: 3
+  transactionStateLogReplicationFactor: 3
+  transactionStateLogMinIsr: 2
+
+# Istio configuration for production
+istio:
+  enabled: true
+  gateway:
+    enabled: true
+    name: coffee-and-tea-gateway
+    hosts:
+      - coffee.example.com
+    tls:
+      mode: SIMPLE
+      credentialName: coffee-and-tea-tls
+  virtualService:
+    enabled: true
+    gateways:
+      - coffee-and-tea-gateway
+    hosts:
+      - coffee.example.com
+    http:
+      - match:
+          - uri:
+              prefix: "/"
+        route:
+          - destination:
+              host: coffee-and-tea
+              port:
+                number: 8081
+        timeout: 30s
+        retries:
+          attempts: 3
+          perTryTimeout: 10s
+  destinationRule:
+    enabled: true
+    trafficPolicy:
+      loadBalancer:
+        simple: LEAST_CONN
+      connectionPool:
+        tcp:
+          maxConnections: 50
+        http:
+          http1MaxPendingRequests: 50
+          maxRequestsPerConnection: 10
+      circuitBreaker:
+        consecutive5xxErrors: 3
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+
+# Ingress configuration for production
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: coffee.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: coffee-and-tea-tls
+      hosts:
+        - coffee.example.com
+
+# External services configuration
+externalServices:
+  openWeatherMap:
+    enabled: true
+    apiKey: "your-production-openweathermap-api-key"
+    baseUrl: "https://api.openweathermap.org/data/2.5"
+
+# Application configuration for production
+app:
+  config:
+    server:
+      port: 8081
+    spring:
+      profiles:
+        active: "production"
+    weather:
+      api:
+        key: "your-production-openweathermap-api-key"
+        baseUrl: "https://api.openweathermap.org/data/2.5"
+    logging:
+      level:
+        root: "WARN"
+        "ru.intf.sasha": "INFO"
+
+# Production health checks
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  initialDelaySeconds: 180
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Enable monitoring in production
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    path: /actuator/prometheus
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Node affinity for production workloads
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/worker
+          operator: In
+          values:
+          - "true"
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - coffee-and-tea
+        topologyKey: kubernetes.io/hostname
+
+# Security context for production
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+
+podSecurityContext:
+  fsGroup: 10001
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001

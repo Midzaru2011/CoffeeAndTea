@@ -1,36 +1,118 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-app
+  name: {{ include "coffee-and-tea.fullname" . }}
+  labels:
+    {{- include "coffee-and-tea.labels" . | nindent 4 }}
+    version: v1
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "coffee-and-tea.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "{{ .Values.istio.enabled }}"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.port }}"
+        prometheus.io/path: "/actuator/prometheus"
       labels:
-        app: {{ .Release.Name }}
+        {{- include "coffee-and-tea.selectorLabels" . | nindent 8 }}
+        version: v1
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "coffee-and-tea.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-      - name: {{ .Release.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        env:
-        - name: SPRING_DATASOURCE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: {{ .Release.Name }}-config
-              key: SPRING_DATASOURCE_URL
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            configMapKeyRef:
-              name: {{ .Release.Name }}-config
-              key: SPRING_DATASOURCE_USERNAME
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-db-secret
-              key: POSTGRES_PASSWORD
-        ports:
-        - containerPort: {{ .Values.service.targetPort }}
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            # Database configuration
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-config
+                  key: database.url
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-config
+                  key: database.username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-secret
+                  key: database.password
+            # Kafka configuration
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-config
+                  key: kafka.bootstrap.servers
+            # Weather API configuration
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-secret
+                  key: weather.api.key
+            - name: WEATHER_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "coffee-and-tea.fullname" . }}-config
+                  key: weather.api.baseUrl
+            # Server configuration
+            - name: SERVER_PORT
+              value: "{{ .Values.service.targetPort }}"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.app.config.spring.profiles.active }}"
+            # Logging configuration
+            - name: LOGGING_LEVEL_ROOT
+              value: "{{ .Values.app.config.logging.level.root }}"
+            - name: LOGGING_LEVEL_RU_INTF_SASHA
+              value: "{{ index .Values.app.config.logging.level "ru.intf.sasha" }}"
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/cache
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

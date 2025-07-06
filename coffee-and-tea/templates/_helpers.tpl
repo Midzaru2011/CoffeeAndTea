@@ -40,6 +40,8 @@ helm.sh/chart: {{ include "coffee-and-tea.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/component: backend
+app.kubernetes.io/part-of: coffee-and-tea-system
 {{- end }}
 
 {{/*
@@ -58,5 +60,52 @@ Create the name of the service account to use
 {{- default (include "coffee-and-tea.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Istio Gateway name
+*/}}
+{{- define "coffee-and-tea.gatewayName" -}}
+{{- if .Values.istio.gateway.name }}
+{{- .Values.istio.gateway.name }}
+{{- else }}
+{{- printf "%s-gateway" (include "coffee-and-tea.fullname" .) }}
+{{- end }}
+{{- end }}
+
+{{/*
+Istio VirtualService name
+*/}}
+{{- define "coffee-and-tea.virtualServiceName" -}}
+{{- printf "%s-vs" (include "coffee-and-tea.fullname" .) }}
+{{- end }}
+
+{{/*
+Istio DestinationRule name
+*/}}
+{{- define "coffee-and-tea.destinationRuleName" -}}
+{{- printf "%s-dr" (include "coffee-and-tea.fullname" .) }}
+{{- end }}
+
+{{/*
+PostgreSQL connection string
+*/}}
+{{- define "coffee-and-tea.postgresql.connectionString" -}}
+{{- if .Values.postgresql.enabled }}
+{{- printf "jdbc:postgresql://%s-postgresql:5432/%s" (include "coffee-and-tea.fullname" .) .Values.postgresql.auth.database }}
+{{- else }}
+{{- printf "jdbc:postgresql://external-postgres:5432/CoffeeAndTea" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Kafka bootstrap servers
+*/}}
+{{- define "coffee-and-tea.kafka.bootstrapServers" -}}
+{{- if .Values.kafka.enabled }}
+{{- printf "%s-kafka:9092" (include "coffee-and-tea.fullname" .) }}
+{{- else }}
+{{- printf "external-kafka:9092" }}
 {{- end }}
 {{- end }}

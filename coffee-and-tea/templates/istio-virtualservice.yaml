@@ -1,0 +1,56 @@
+{{- if and .Values.istio.enabled .Values.istio.virtualService.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "coffee-and-tea.virtualServiceName" . }}
+  labels:
+    {{- include "coffee-and-tea.labels" . | nindent 4 }}
+spec:
+  hosts:
+  {{- range .Values.istio.virtualService.hosts }}
+  - {{ . | quote }}
+  {{- end }}
+  gateways:
+  {{- range .Values.istio.virtualService.gateways }}
+  - {{ . }}
+  {{- end }}
+  http:
+  {{- range .Values.istio.virtualService.http }}
+  - match:
+    {{- range .match }}
+    - uri:
+        {{- if .uri.prefix }}
+        prefix: {{ .uri.prefix | quote }}
+        {{- else if .uri.exact }}
+        exact: {{ .uri.exact | quote }}
+        {{- else if .uri.regex }}
+        regex: {{ .uri.regex | quote }}
+        {{- end }}
+    {{- end }}
+    route:
+    {{- range .route }}
+    - destination:
+        host: {{ include "coffee-and-tea.fullname" $ }}
+        port:
+          number: {{ .destination.port.number }}
+      {{- if .weight }}
+      weight: {{ .weight }}
+      {{- end }}
+    {{- end }}
+    {{- if .timeout }}
+    timeout: {{ .timeout }}
+    {{- end }}
+    {{- if .retries }}
+    retries:
+      attempts: {{ .retries.attempts }}
+      perTryTimeout: {{ .retries.perTryTimeout }}
+      {{- if .retries.retryOn }}
+      retryOn: {{ .retries.retryOn }}
+      {{- end }}
+    {{- end }}
+    {{- if .fault }}
+    fault:
+      {{- toYaml .fault | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -1,21 +1,277 @@
-# Настройки ConfigMap
-springDatasource:
-  url: "jdbc:postgresql://51.250.0.205:5432/CoffeeAndTea"
-  username: "sasha"
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
 
-# Настройки Secret
-postgresPassword: ""
-
-# Настройки Deployment
+# Application settings
 replicaCount: 2
+
 image:
-  repository: midzaru2011/coffee-and-tea-app
-  tag: "2.0.1"
+  repository: midzaru2011/coffeeandtea
+  tag: "latest"
   pullPolicy: IfNotPresent
 
-# Настройки Service
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 2000
+
+# Container Security Context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Service settings
 service:
-  type: LoadBalancer
-  port: 8082
-  targetPort: 8082
-  sessionAffinity: ClientIP
+  type: ClusterIP
+  port: 8081
+  targetPort: 8081
+  annotations: {}
+
+# Application configuration
+app:
+  config:
+    server:
+      port: 8081
+    spring:
+      profiles:
+        active: "production"
+    weather:
+      api:
+        key: "demo_key"
+        baseUrl: "https://api.openweathermap.org/data/2.5"
+    logging:
+      level:
+        root: "INFO"
+        "ru.intf.sasha": "DEBUG"
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Auto-scaling
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - coffee-and-tea
+        topologyKey: kubernetes.io/hostname
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: coffee-and-tea.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: coffee-and-tea-tls
+      hosts:
+        - coffee-and-tea.local
+
+# Istio configuration
+istio:
+  enabled: true
+  gateway:
+    enabled: true
+    name: coffee-and-tea-gateway
+    hosts:
+      - coffee-and-tea.local
+    tls:
+      mode: SIMPLE
+      credentialName: coffee-and-tea-tls
+  virtualService:
+    enabled: true
+    gateways:
+      - coffee-and-tea-gateway
+    hosts:
+      - coffee-and-tea.local
+    http:
+      - match:
+          - uri:
+              prefix: "/"
+        route:
+          - destination:
+              host: coffee-and-tea
+              port:
+                number: 8081
+        timeout: 30s
+        retries:
+          attempts: 3
+          perTryTimeout: 10s
+  destinationRule:
+    enabled: true
+    trafficPolicy:
+      loadBalancer:
+        simple: LEAST_CONN
+      connectionPool:
+        tcp:
+          maxConnections: 10
+        http:
+          http1MaxPendingRequests: 10
+          maxRequestsPerConnection: 2
+      circuitBreaker:
+        consecutive5xxErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    subsets:
+      - name: v1
+        labels:
+          version: v1
+
+# PostgreSQL dependency configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "admin"
+    username: "sasha"
+    password: "sasha_password"
+    database: "CoffeeAndTea"
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    extendedConfiguration: |
+      max_connections = 200
+      shared_buffers = 128MB
+      effective_cache_size = 256MB
+    initdb:
+      scripts:
+        init.sql: |
+          -- Create initial database schema if needed
+          CREATE SCHEMA IF NOT EXISTS coffee_schema;
+
+# Kafka dependency configuration
+kafka:
+  enabled: true
+  listeners:
+    client:
+      protocol: PLAINTEXT
+    controller:
+      protocol: PLAINTEXT
+    interbroker:
+      protocol: PLAINTEXT
+    external:
+      protocol: PLAINTEXT
+  controller:
+    replicaCount: 1
+  broker:
+    replicaCount: 1
+    persistence:
+      enabled: true
+      size: 8Gi
+  kraft:
+    enabled: true
+  zookeeper:
+    enabled: false
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  logRetentionHours: 168
+  defaultReplicationFactor: 1
+  offsetsTopicReplicationFactor: 1
+  transactionStateLogReplicationFactor: 1
+  transactionStateLogMinIsr: 1
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /actuator/prometheus
+  podMonitor:
+    enabled: false
+
+# External services configuration
+externalServices:
+  openWeatherMap:
+    enabled: true
+    apiKey: "demo_key"
+    baseUrl: "https://api.openweathermap.org/data/2.5"
+
+# ConfigMap and Secret settings
+configMap:
+  create: true
+  data: {}
+
+secret:
+  create: true
+  data: {}
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

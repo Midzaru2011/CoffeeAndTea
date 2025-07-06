@@ -1,0 +1,35 @@
+{{- if and .Values.istio.enabled .Values.istio.destinationRule.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "coffee-and-tea.destinationRuleName" . }}
+  labels:
+    {{- include "coffee-and-tea.labels" . | nindent 4 }}
+spec:
+  host: {{ include "coffee-and-tea.fullname" . }}
+  trafficPolicy:
+    {{- if .Values.istio.destinationRule.trafficPolicy.loadBalancer }}
+    loadBalancer:
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.loadBalancer | nindent 6 }}
+    {{- end }}
+    {{- if .Values.istio.destinationRule.trafficPolicy.connectionPool }}
+    connectionPool:
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.connectionPool | nindent 6 }}
+    {{- end }}
+    {{- if .Values.istio.destinationRule.trafficPolicy.circuitBreaker }}
+    outlierDetection:
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.circuitBreaker | nindent 6 }}
+    {{- end }}
+  {{- if .Values.istio.destinationRule.subsets }}
+  subsets:
+  {{- range .Values.istio.destinationRule.subsets }}
+  - name: {{ .name }}
+    labels:
+      {{- toYaml .labels | nindent 6 }}
+    {{- if .trafficPolicy }}
+    trafficPolicy:
+      {{- toYaml .trafficPolicy | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}

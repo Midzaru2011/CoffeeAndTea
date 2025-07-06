@@ -1,7 +1,42 @@
+{{- if .Values.configMap.create }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-config
+  name: {{ include "coffee-and-tea.fullname" . }}-config
+  labels:
+    {{- include "coffee-and-tea.labels" . | nindent 4 }}
 data:
-  SPRING_DATASOURCE_URL: {{ .Values.springDatasource.url }}
-  SPRING_DATASOURCE_USERNAME: {{ .Values.springDatasource.username }}
+  # Database configuration
+  {{- if .Values.postgresql.enabled }}
+  database.url: "jdbc:postgresql://{{ include "coffee-and-tea.fullname" . }}-postgresql:5432/{{ .Values.postgresql.auth.database }}"
+  database.username: "{{ .Values.postgresql.auth.username }}"
+  {{- else }}
+  database.url: "jdbc:postgresql://external-postgres:5432/CoffeeAndTea"
+  database.username: "sasha"
+  {{- end }}
+  
+  # Kafka configuration
+  {{- if .Values.kafka.enabled }}
+  kafka.bootstrap.servers: "{{ include "coffee-and-tea.fullname" . }}-kafka:9092"
+  {{- else }}
+  kafka.bootstrap.servers: "external-kafka:9092"
+  {{- end }}
+  kafka.consumer.group.id: "coffee-and-tea-group"
+  kafka.consumer.auto.offset.reset: "earliest"
+  
+  # Weather API configuration
+  weather.api.baseUrl: "{{ .Values.externalServices.openWeatherMap.baseUrl }}"
+  
+  # Application configuration
+  server.port: "{{ .Values.app.config.server.port }}"
+  spring.profiles.active: "{{ .Values.app.config.spring.profiles.active }}"
+  
+  # Logging configuration
+  logging.level.root: "{{ .Values.app.config.logging.level.root }}"
+  logging.level.ru.intf.sasha: "{{ index .Values.app.config.logging.level "ru.intf.sasha" }}"
+  
+  # Additional configuration
+  {{- with .Values.configMap.data }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
