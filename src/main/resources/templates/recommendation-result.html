@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Рекомендация кофе</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script th:src="@{/js/scripts.js}" type="text/javascript"></script>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <style>
+        .recommendation-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weather-info {
+            background-color: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .coffee-recommendation {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .coffee-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+        
+        .coffee-description {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .coffee-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2E8B57;
+            margin-bottom: 25px;
+        }
+        
+        .recommendation-reason {
+            background-color: #f0e6d2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #8B4513;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            background-color: #8B4513;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .action-buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .order-button {
+            background-color: #2E8B57;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .order-button:hover {
+            background-color: #256B49;
+        }
+        
+        .back-button {
+            background-color: #8B4513;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .back-button:hover {
+            background-color: #5D2F0A;
+        }
+        
+        .error-container {
+            background-color: #ffe6e6;
+            color: #d8000c;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Добавляем блок для отображения информации о пользователе -->
+    <div th:if="${#authentication != null and #authentication.isAuthenticated()}" class="auth-info">
+        <p><strong>Вы вошли как </strong> <span th:text="${#authentication.name}"></span>.</p>
+        <button id="logout-button" class="logout-button">Выйти</button>
+    </div>
+    <div th:if="${#authentication == null or not #authentication.isAuthenticated()}">
+        <p>Вы не авторизованы.</p>
+        <a href="/login" class="login-link">Войти</a>
+    </div>
+
+    <div class="recommendation-container">
+        <!-- Если есть ошибка -->
+        <div th:if="${error}" class="error-container">
+            <h2>😔 Упс! Что-то пошло не так</h2>
+            <p th:text="${error}"></p>
+            <div style="margin-top: 20px;">
+                <a href="/recommendations" class="back-button">Попробовать снова</a>
+                <a href="/" class="back-button" style="background-color: #666;">На главную</a>
+            </div>
+        </div>
+        
+        <!-- Если есть рекомендация -->
+        <div th:if="${recommendation}">
+            <h1 style="text-align: center; color: #8B4513; margin-bottom: 30px;">
+                ☕ Ваша персональная рекомендация 🌤️
+            </h1>
+            
+            <!-- Информация о погоде -->
+            <div class="weather-info">
+                <h3 style="margin-bottom: 15px; color: #2E8B57;">
+                    🌤️ Погода в городе <span th:text="${recommendation.weatherData.city}"></span>
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div>
+                        <strong>🌡️ Температура:</strong><br>
+                        <span th:text="${#numbers.formatDecimal(recommendation.weatherData.temperature, 0, 0)}"></span>°C
+                    </div>
+                    <div>
+                        <strong>☁️ Условия:</strong><br>
+                        <span th:text="${recommendation.weatherData.description}"></span>
+                    </div>
+                    <div>
+                        <strong>💧 Влажность:</strong><br>
+                        <span th:text="${recommendation.weatherData.humidity}"></span>%
+                    </div>
+                    <div>
+                        <strong>💨 Ветер:</strong><br>
+                        <span th:text="${#numbers.formatDecimal(recommendation.weatherData.windSpeed, 0, 1)}"></span> м/с
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Рекомендация кофе -->
+            <div class="coffee-recommendation">
+                <div class="coffee-name" th:text="${recommendation.recommendedCoffee.name}"></div>
+                <div class="coffee-description" th:text="${recommendation.recommendedCoffee.description}"></div>
+                <div class="coffee-price">
+                    💰 <span th:text="${#numbers.formatDecimal(recommendation.recommendedCoffee.price, 0, 0)}"></span> руб.
+                </div>
+                
+                <div class="recommendation-reason">
+                    <strong style="color: #8B4513;">💡 Почему именно этот кофе?</strong><br><br>
+                    <span th:text="${recommendation.recommendationReason}"></span>
+                </div>
+                
+                <div class="confidence-badge">
+                    ⭐ Уверенность: <span th:text="${#numbers.formatDecimal(recommendation.confidenceScore * 100, 0, 0)}"></span>%
+                </div>
+                
+                <div class="action-buttons">
+                    <form th:action="@{/add}" method="post" style="display: inline;">
+                        <input type="hidden" name="coffeeName" th:value="${recommendation.recommendedCoffee.name}">
+                        <button type="submit" class="order-button">
+                            🛒 Добавить в заказ
+                        </button>
+                    </form>
+                    <a href="/recommendations" class="back-button">🔄 Другой город</a>
+                    <a href="/" class="back-button" style="background-color: #666;">🏠 На главную</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

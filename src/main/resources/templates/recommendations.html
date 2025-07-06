@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Рекомендации кофе по погоде</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script th:src="@{/js/scripts.js}" type="text/javascript"></script>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <style>
+        .weather-recommendation-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weather-form {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .city-input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            width: 300px;
+            margin-right: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .city-input:focus {
+            border-color: #8B4513;
+        }
+        
+        .get-recommendation-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .get-recommendation-btn:hover {
+            background-color: #5D2F0A;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8B4513;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .recommendation-result {
+            display: none;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weather-info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .coffee-recommendation {
+            background-color: #f0e6d2;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .coffee-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 10px;
+        }
+        
+        .coffee-description {
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .recommendation-reason {
+            background-color: #fff;
+            padding: 15px;
+            border-left: 4px solid #8B4513;
+            margin-top: 15px;
+        }
+        
+        .confidence-score {
+            text-align: right;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .error-message {
+            background-color: #ffe6e6;
+            color: #d8000c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .popular-cities {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .city-button {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .city-button:hover {
+            background-color: #8B4513;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Добавляем блок для отображения информации о пользователе -->
+    <div th:if="${#authentication != null and #authentication.isAuthenticated()}" class="auth-info">
+        <p><strong>Вы вошли как </strong> <span th:text="${#authentication.name}"></span>.</p>
+        <button id="logout-button" class="logout-button">Выйти</button>
+    </div>
+    <div th:if="${#authentication == null or not #authentication.isAuthenticated()}">
+        <p>Вы не авторизованы.</p>
+        <a href="/login" class="login-link">Войти</a>
+    </div>
+
+    <div class="weather-recommendation-container">
+        <h1 style="text-align: center; color: #8B4513; margin-bottom: 30px;">
+            ☕ Рекомендации кофе по погоде 🌤️
+        </h1>
+        
+        <div class="weather-form">
+            <input type="text" id="city-input" class="city-input" placeholder="Введите название города">
+            <button id="get-recommendation-btn" class="get-recommendation-btn">Получить рекомендацию</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Получаем данные о погоде и подбираем кофе...</p>
+        </div>
+        
+        <div class="recommendation-result" id="recommendation-result">
+            <div class="weather-info" id="weather-info">
+                <!-- Здесь будет информация о погоде -->
+            </div>
+            
+            <div class="coffee-recommendation" id="coffee-recommendation">
+                <!-- Здесь будет рекомендация кофе -->
+            </div>
+        </div>
+        
+        <div class="error-message" id="error-message">
+            <!-- Здесь будут ошибки -->
+        </div>
+        
+        <div class="popular-cities">
+            <h3 style="color: #8B4513;">Популярные города:</h3>
+            <span class="city-button" onclick="selectCity('Москва')">Москва</span>
+            <span class="city-button" onclick="selectCity('Санкт-Петербург')">Санкт-Петербург</span>
+            <span class="city-button" onclick="selectCity('Новосибирск')">Новосибирск</span>
+            <span class="city-button" onclick="selectCity('Екатеринбург')">Екатеринбург</span>
+            <span class="city-button" onclick="selectCity('Сочи')">Сочи</span>
+            <span class="city-button" onclick="selectCity('Казань')">Казань</span>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" style="color: #8B4513; text-decoration: none; font-weight: bold;">← Вернуться к меню</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('get-recommendation-btn').addEventListener('click', function() {
+            const city = document.getElementById('city-input').value.trim();
+            if (city) {
+                getRecommendation(city);
+            } else {
+                showError('Пожалуйста, введите название города');
+            }
+        });
+        
+        document.getElementById('city-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('get-recommendation-btn').click();
+            }
+        });
+        
+        function selectCity(cityName) {
+            document.getElementById('city-input').value = cityName;
+            getRecommendation(cityName);
+        }
+        
+        function getRecommendation(city) {
+            showLoading();
+            hideError();
+            hideResult();
+            
+            fetch(`/recommendations/api/by-city?city=${encodeURIComponent(city)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка получения данных');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    hideLoading();
+                    showRecommendation(data);
+                })
+                .catch(error => {
+                    hideLoading();
+                    showError('Не удалось получить рекомендацию. Проверьте название города и попробуйте еще раз.');
+                });
+        }
+        
+        function showRecommendation(recommendation) {
+            const weatherInfo = document.getElementById('weather-info');
+            const coffeeRecommendation = document.getElementById('coffee-recommendation');
+            
+            // Отображаем информацию о погоде
+            weatherInfo.innerHTML = `
+                <h3>🌤️ Погода в городе ${recommendation.weatherData.city}</h3>
+                <p><strong>Температура:</strong> ${Math.round(recommendation.weatherData.temperature)}°C</p>
+                <p><strong>Условия:</strong> ${recommendation.weatherData.description}</p>
+                <p><strong>Влажность:</strong> ${recommendation.weatherData.humidity}%</p>
+                <p><strong>Скорость ветра:</strong> ${recommendation.weatherData.windSpeed} м/с</p>
+            `;
+            
+            // Отображаем рекомендацию кофе
+            coffeeRecommendation.innerHTML = `
+                <div class="coffee-name">☕ ${recommendation.recommendedCoffee.name}</div>
+                <div class="coffee-description">${recommendation.recommendedCoffee.description}</div>
+                <div style="font-size: 18px; color: #8B4513;"><strong>Цена: ${recommendation.recommendedCoffee.price} руб.</strong></div>
+                <div class="recommendation-reason">
+                    <strong>Почему именно этот кофе?</strong><br>
+                    ${recommendation.recommendationReason}
+                </div>
+                <div class="confidence-score">
+                    Уверенность в рекомендации: ${Math.round(recommendation.confidenceScore * 100)}%
+                </div>
+            `;
+            
+            showResult();
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function showResult() {
+            document.getElementById('recommendation-result').style.display = 'block';
+        }
+        
+        function hideResult() {
+            document.getElementById('recommendation-result').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+    </script>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
