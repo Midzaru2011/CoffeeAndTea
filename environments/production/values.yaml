@@ -1,0 +1,270 @@
+# Production environment configuration
+# High availability, security, and performance
+
+global:
+  environment: production
+  domain: example.com
+
+image:
+  tag: "2.1.2"  # Fixed version for production
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+# Production autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+  alerting:
+    enabled: true
+    rules:
+      - alert: HighCPUUsage
+        expr: cpu_usage > 80
+      - alert: HighMemoryUsage
+        expr: memory_usage > 85
+      - alert: HighErrorRate
+        expr: error_rate > 5
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Production database settings - high availability
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "super-secure-production-password"  # Use external secret in real deployment
+    database: "coffee_and_tea"
+  architecture: replication
+  primary:
+    persistence:
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+  readReplicas:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+  metrics:
+    enabled: true
+  backup:
+    enabled: true
+    cronjob:
+      schedule: "0 2 * * *"  # Daily backup at 2 AM
+
+# Production Kafka settings - high availability
+kafka:
+  enabled: true
+  controller:
+    replicaCount: 3
+    persistence:
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+  broker:
+    replicaCount: 3
+    persistence:
+      size: 200Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+  metrics:
+    kafka:
+      enabled: true
+  kraft:
+    enabled: true
+
+# Production ingress with TLS
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  tls:
+    - secretName: coffee-and-tea-prod-tls
+      hosts:
+        - coffee.example.com
+  hosts:
+    - host: coffee.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Production Istio configuration
+istio:
+  enabled: true
+  gateway:
+    enabled: true
+    hosts:
+      - coffee.example.com
+    tls:
+      mode: SIMPLE
+      credentialName: coffee-and-tea-prod-tls
+  virtualService:
+    enabled: true
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+  destinationRule:
+    enabled: true
+    trafficPolicy:
+      loadBalancer:
+        simple: LEAST_CONN
+      circuitBreaker:
+        consecutiveErrors: 3
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+        minHealthPercent: 50
+
+# External services configuration
+externalServices:
+  openWeatherMap:
+    enabled: true
+    apiKey: "production-api-key"  # Use external secret management
+    baseUrl: "http://api.openweathermap.org/data/2.5"
+    timeout: 5s
+    retries: 3
+
+# Production feature flags
+features:
+  enableDemoMode: false
+  enableDebugLogging: false
+  enablePerformanceMetrics: true
+  enableTracing: true
+  enableAuditLogging: true
+
+# Production security settings
+security:
+  jwt:
+    secret: "production-jwt-secret-use-external-secret"  # Use external secret management
+    expiration: 900  # 15 minutes
+  pod:
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+      fsGroupChangePolicy: "OnRootMismatch"
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+
+# Network policies - strict security
+networkPolicies:
+  enabled: true
+  ingress:
+    enabled: true
+    allowedSources:
+      - namespaceSelector:
+          matchLabels:
+            name: istio-system
+      - namespaceSelector:
+          matchLabels:
+            name: monitoring
+  egress:
+    enabled: true
+    allowedDestinations:
+      - namespaceSelector:
+          matchLabels:
+            name: kube-system
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: postgresql
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: kafka
+
+# Resource quotas
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "10"
+    requests.memory: 20Gi
+    limits.cpu: "20"
+    limits.memory: 40Gi
+
+# Backup and disaster recovery
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily backup
+  retention: "30d"
+
+# Performance tuning
+performance:
+  jvm:
+    initialHeapSize: "1g"
+    maxHeapSize: "1g"
+    gcOptions: "-XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+  database:
+    connectionPool:
+      maxSize: 20
+      minSize: 5

@@ -1,0 +1,91 @@
+# Development environment configuration
+# Extends coffee-and-tea/examples/values-development.yaml
+
+global:
+  environment: development
+  domain: dev.local
+
+image:
+  tag: "latest"
+  pullPolicy: Always
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Disable resource-intensive features for development
+autoscaling:
+  enabled: false
+
+monitoring:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+# Development database settings
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "dev-password"
+    database: "coffee_and_tea_dev"
+  primary:
+    persistence:
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# Development Kafka settings
+kafka:
+  enabled: true
+  controller:
+    replicaCount: 1
+  broker:
+    replicaCount: 1
+  persistence:
+    size: 5Gi
+
+# Disable TLS for development
+ingress:
+  enabled: true
+  className: nginx
+  tls: []
+  hosts:
+    - host: coffee-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Disable Istio for development
+istio:
+  enabled: false
+
+# External services configuration
+externalServices:
+  openWeatherMap:
+    enabled: true
+    apiKey: "demo_key"  # Demo mode for development
+    baseUrl: "http://api.openweathermap.org/data/2.5"
+
+# Development-specific feature flags
+features:
+  enableDemoMode: true
+  enableDebugLogging: true
+  enableH2Console: false  # Using PostgreSQL even in dev
+
+# Security settings for development
+security:
+  jwt:
+    secret: "dev-jwt-secret-key-not-for-production"
+    expiration: 86400  # 24 hours

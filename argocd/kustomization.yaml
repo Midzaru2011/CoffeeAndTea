@@ -1,0 +1,67 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: coffee-and-tea-argocd
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# ArgoCD resources for Coffee and Tea application
+resources:
+  # Projects must be applied first
+  - projects/coffee-and-tea-project.yaml
+  
+  # Applications
+  - applications/coffee-and-tea-dev.yaml
+  - applications/coffee-and-tea-staging.yaml
+  - applications/coffee-and-tea-production.yaml
+  
+  # ApplicationSets (optional - uncomment if needed)
+  # - applicationsets/coffee-and-tea-appset.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/part-of: coffee-and-tea
+  app.kubernetes.io/managed-by: argocd
+  team: backend
+
+# Namespace for all ArgoCD resources
+namespace: argocd
+
+# Patches for environment-specific customizations
+patchesStrategicMerge:
+  # Development patches
+  - |-
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: coffee-and-tea-dev
+      annotations:
+        argocd.argoproj.io/manifest-generate-paths: .
+    spec:
+      source:
+        helm:
+          parameters:
+            - name: global.environment
+              value: development
+
+# Transformers for common modifications
+transformers:
+  # Add common annotations
+  - |-
+    apiVersion: builtin
+    kind: AnnotationsTransformer
+    metadata:
+      name: add-annotations
+    annotations:
+      config.k8s.io/managed-by: kustomize
+      argocd.argoproj.io/tracking-id: coffee-and-tea
+
+# Images for container references (if needed)
+images: []
+
+# Replicas for scaling (if applicable)
+replicas: []
+
+# Generators for automated resource creation
+generators: []

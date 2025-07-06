@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coffee-and-tea-dev
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: coffee-and-tea
+    environment: development
+    team: backend
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/coffee-and-tea.git
+    targetRevision: HEAD
+    path: coffee-and-tea
+    helm:
+      valueFiles:
+        - examples/values-development.yaml
+      parameters:
+        - name: image.tag
+          value: "latest"
+        - name: replicaCount
+          value: "1"
+        - name: postgresql.enabled
+          value: "true"
+        - name: kafka.enabled
+          value: "true"
+        - name: istio.enabled
+          value: "false"
+        - name: ingress.hosts[0].host
+          value: "coffee-and-tea-dev.local"
+        - name: externalServices.openWeatherMap.apiKey
+          value: "demo_key"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: coffee-and-tea-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - Validate=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data

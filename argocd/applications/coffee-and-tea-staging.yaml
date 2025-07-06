@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coffee-and-tea-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: coffee-and-tea
+    environment: staging
+    team: backend
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    notifications.argoproj.io/subscribe.on-deployed.slack: coffee-and-tea-alerts
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: coffee-and-tea-alerts
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: coffee-and-tea-project
+  source:
+    repoURL: https://github.com/your-org/coffee-and-tea.git
+    targetRevision: HEAD
+    path: coffee-and-tea
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.tag
+          value: "staging"
+        - name: replicaCount
+          value: "2"
+        - name: postgresql.enabled
+          value: "true"
+        - name: kafka.enabled
+          value: "true"
+        - name: istio.enabled
+          value: "true"
+        - name: ingress.hosts[0].host
+          value: "coffee-and-tea-staging.example.com"
+        - name: ingress.tls[0].secretName
+          value: "coffee-and-tea-staging-tls"
+        - name: postgresql.auth.password
+          value: "staging-secure-password"
+        - name: resources.requests.cpu
+          value: "250m"
+        - name: resources.requests.memory
+          value: "512Mi"
+        - name: resources.limits.cpu
+          value: "1000m"
+        - name: resources.limits.memory
+          value: "1Gi"
+        - name: monitoring.enabled
+          value: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: coffee-and-tea-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - Validate=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: networking.istio.io
+      kind: VirtualService
+      jsonPointers:
+        - /spec/http/0/fault

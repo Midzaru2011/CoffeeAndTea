@@ -1,0 +1,139 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: coffee-and-tea-project
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: coffee-and-tea-project
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Coffee and Tea Application Project
+  sourceRepos:
+    - 'https://github.com/your-org/coffee-and-tea.git'
+    - 'https://charts.bitnami.com/bitnami'
+  destinations:
+    - namespace: 'coffee-and-tea-*'
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.istio.io
+      kind: Gateway
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionWebhook
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: networking.istio.io
+      kind: VirtualService
+    - group: networking.istio.io
+      kind: DestinationRule
+    - group: networking.istio.io
+      kind: ServiceEntry
+    - group: security.istio.io
+      kind: PeerAuthentication
+    - group: security.istio.io
+      kind: AuthorizationPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: batch
+      kind: Job
+    - group: batch
+      kind: CronJob
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+  roles:
+    # Developer role - read-only access to development
+    - name: coffee-and-tea-developer
+      description: Read-only access to Coffee and Tea development environments
+      policies:
+        - p, proj:coffee-and-tea-project:coffee-and-tea-developer, applications, get, coffee-and-tea-project/coffee-and-tea-dev, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-developer, applications, sync, coffee-and-tea-project/coffee-and-tea-dev, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-developer, logs, get, coffee-and-tea-project/*, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-developer, exec, create, coffee-and-tea-project/coffee-and-tea-dev, allow
+      groups:
+        - your-org:coffee-and-tea-developers
+    # QA role - access to staging
+    - name: coffee-and-tea-qa
+      description: QA access to Coffee and Tea staging environments
+      policies:
+        - p, proj:coffee-and-tea-project:coffee-and-tea-qa, applications, get, coffee-and-tea-project/coffee-and-tea-staging, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-qa, applications, sync, coffee-and-tea-project/coffee-and-tea-staging, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-qa, applications, action/*, coffee-and-tea-project/coffee-and-tea-staging, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-qa, logs, get, coffee-and-tea-project/*, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-qa, exec, create, coffee-and-tea-project/coffee-and-tea-staging, allow
+      groups:
+        - your-org:coffee-and-tea-qa
+    # DevOps role - full access to all environments
+    - name: coffee-and-tea-devops
+      description: Full access to Coffee and Tea applications
+      policies:
+        - p, proj:coffee-and-tea-project:coffee-and-tea-devops, applications, *, coffee-and-tea-project/*, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-devops, repositories, *, *, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-devops, logs, get, coffee-and-tea-project/*, allow
+        - p, proj:coffee-and-tea-project:coffee-and-tea-devops, exec, create, coffee-and-tea-project/*, allow
+      groups:
+        - your-org:coffee-and-tea-devops
+        - your-org:platform-team
+  syncWindows:
+    # Maintenance window for production
+    - kind: deny
+      schedule: '0 2 * * 0'  # Every Sunday at 2 AM
+      duration: 1h
+      applications:
+        - coffee-and-tea-production
+      manualSync: false
+    # Business hours restriction for production
+    - kind: allow
+      schedule: '0 9-17 * * 1-5'  # Monday to Friday, 9 AM to 5 PM
+      duration: 8h
+      applications:
+        - coffee-and-tea-production
+      manualSync: true
+  signatureKeys:
+    - keyID: 4AEE18F83AFDEB23
+  # Orphaned resources monitoring
+  orphanedResources:
+    warn: true
+    ignore:
+      - group: ""
+        kind: Secret
+        name: sh.helm.release.*
+      - group: ""
+        kind: ConfigMap
+        name: sh.helm.release.*

@@ -1,0 +1,88 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: coffee-and-tea-appset
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: coffee-and-tea-appset
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  generators:
+    # Git generator for different environment configurations
+    - git:
+        repoURL: https://github.com/your-org/coffee-and-tea.git
+        revision: HEAD
+        directories:
+          - path: environments/*
+        values:
+          environment: '{{path.basename}}'
+    # Cluster generator for multi-cluster deployments
+    - clusters:
+        selector:
+          matchLabels:
+            environment: '{{values.environment}}'
+        values:
+          clusterName: '{{name}}'
+  template:
+    metadata:
+      name: 'coffee-and-tea-{{values.environment}}-{{values.clusterName}}'
+      labels:
+        app.kubernetes.io/name: coffee-and-tea
+        environment: '{{values.environment}}'
+        cluster: '{{values.clusterName}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+        notifications.argoproj.io/subscribe.on-deployed.slack: 'coffee-and-tea-{{values.environment}}-alerts'
+        notifications.argoproj.io/subscribe.on-health-degraded.slack: 'coffee-and-tea-{{values.environment}}-alerts'
+    spec:
+      project: coffee-and-tea-project
+      source:
+        repoURL: https://github.com/your-org/coffee-and-tea.git
+        targetRevision: '{{values.targetRevision}}'
+        path: coffee-and-tea
+        helm:
+          valueFiles:
+            - '../environments/{{values.environment}}/values.yaml'
+          parameters:
+            - name: image.tag
+              value: '{{values.imageTag}}'
+            - name: ingress.hosts[0].host
+              value: 'coffee-{{values.environment}}.{{values.domain}}'
+      destination:
+        server: '{{server}}'
+        namespace: 'coffee-and-tea-{{values.environment}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      revisionHistoryLimit: 10
+  syncPolicy:
+    preserveResourcesOnDeletion: false
+    applicationsSync: create-update
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values: ["development"]
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values: ["staging"]
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values: ["production"]

@@ -1,0 +1,109 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coffee-and-tea-production
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: coffee-and-tea
+    environment: production
+    team: backend
+    criticality: high
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    notifications.argoproj.io/subscribe.on-deployed.slack: coffee-and-tea-prod-alerts
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: coffee-and-tea-prod-alerts
+    notifications.argoproj.io/subscribe.on-sync-failed.email: devops@example.com
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: coffee-and-tea-project
+  source:
+    repoURL: https://github.com/your-org/coffee-and-tea.git
+    targetRevision: "v2.1.2"  # Fixed version for production
+    path: coffee-and-tea
+    helm:
+      valueFiles:
+        - examples/values-production.yaml
+      parameters:
+        - name: image.tag
+          value: "2.1.2"
+        - name: replicaCount
+          value: "3"
+        - name: postgresql.enabled
+          value: "true"
+        - name: kafka.enabled
+          value: "true"
+        - name: istio.enabled
+          value: "true"
+        - name: ingress.hosts[0].host
+          value: "coffee.example.com"
+        - name: ingress.tls[0].secretName
+          value: "coffee-and-tea-prod-tls"
+        - name: autoscaling.enabled
+          value: "true"
+        - name: autoscaling.minReplicas
+          value: "3"
+        - name: autoscaling.maxReplicas
+          value: "20"
+        - name: monitoring.enabled
+          value: "true"
+        - name: podDisruptionBudget.enabled
+          value: "true"
+        - name: podDisruptionBudget.minAvailable
+          value: "2"
+        # Production PostgreSQL settings
+        - name: postgresql.primary.persistence.size
+          value: "50Gi"
+        - name: postgresql.primary.resources.requests.cpu
+          value: "1000m"
+        - name: postgresql.primary.resources.requests.memory
+          value: "2Gi"
+        - name: postgresql.primary.resources.limits.cpu
+          value: "2000m"
+        - name: postgresql.primary.resources.limits.memory
+          value: "4Gi"
+        # Production Kafka settings
+        - name: kafka.broker.replicaCount
+          value: "3"
+        - name: kafka.controller.replicaCount
+          value: "3"
+        - name: kafka.broker.persistence.size
+          value: "100Gi"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: coffee-and-tea-production
+  syncPolicy:
+    # Manual sync for production - require approval
+    automated: null
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - Validate=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 20
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: networking.istio.io
+      kind: VirtualService
+      jsonPointers:
+        - /spec/http/0/fault
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+      jsonPointers:
+        - /spec/minReplicas
+        - /spec/maxReplicas
