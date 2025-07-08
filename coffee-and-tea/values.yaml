@@ -1,6 +1,6 @@
 # Настройки ConfigMap
 springDatasource:
-  url: "jdbc:postgresql://51.250.0.205:5432/CoffeeAndTea"
+  url: "jdbc:postgresql://localhost/CoffeeAndTea"
   username: "sasha"
 
 # Настройки Secret
