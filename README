@@ -4,3 +4,25 @@
 - в БД через changeSet создается таблица coffees и через changelog наполняется данными
 - добавлен changelog 004-add-coffees.yaml
 - для страницы авторизации добавлен фон
+- добавлена кофигурация для работы по SSL: 
+    sudo openssl pkcs12 -export -chain -inkey /etc/letsencrypt/live/coffeeandteamenu.ru/privkey.pem -CAfile /etc/letsencrypt/live/coffeeandteamenu.ru/fullchain.pem -in /etc/letsencrypt/live/coffeeandteamenu.ru/cert.pem -out keystore.p12 -name tomcat
+    sudo openssl pkcs12 -export \
+  -in /etc/letsencrypt/live/coffeeandteamenu.ru/cert.pem \
+  -inkey /etc/letsencrypt/live/coffeeandteamenu.ru/privkey.pem \
+  -chain \
+  -CAfile /etc/letsencrypt/live/coffeeandteamenu.ru/fullchain.pem \
+  -name tomcat \
+  -out keystore.p12 \
+  -password pass:
+
+  keytool -importkeystore \
+        -deststorepass  \
+        -destkeypass  \
+        -destkeystore keystore.jks \
+        -srckeystore keystore.p12 \
+        -srcstoretype PKCS12 \
+        -srcstorepass 
+- добавлена конфигурация для прокси на 443 порт через Nginx www.coffeeandteamenu.ru
+- добавлена конфигурация systemd unit и sh script для запуска приложения start.sh и coffeeandteamenu.service
+- реализована интеграция с GigaChat GigaChatAIAgent
+- в application.properties вынесены конфиги для подключения

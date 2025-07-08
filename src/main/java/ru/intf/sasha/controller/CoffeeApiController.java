@@ -1,10 +1,7 @@
 package ru.intf.sasha.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.intf.sasha.model.Coffee;
 import ru.intf.sasha.service.CoffeeService;
 
@@ -22,5 +19,11 @@ public class CoffeeApiController {
     public ResponseEntity<Coffee> addCoffee(@RequestBody Coffee coffee) {
         Coffee savedCoffee = coffeeService.addCoffee(coffee);
         return ResponseEntity.ok(savedCoffee);
+    }
+
+    @GetMapping("/info/{name}")
+    public ResponseEntity<String> getCoffeeInfo(@PathVariable String name) {
+        String description = coffeeService.getCoffeeDescription(name);
+        return ResponseEntity.ok(description);
     }
 }

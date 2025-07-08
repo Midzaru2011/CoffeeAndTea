@@ -18,7 +18,7 @@ FROM eclipse-temurin:17-jre-alpine
 COPY --from=build /app/target/*.jar /CoffeAndTea.jar
 
 # Указываем порт, который будет открыт в контейнере
-EXPOSE 8081
+EXPOSE 8443
 
 # Запускаем приложение
 ENTRYPOINT ["java", "-jar", "/CoffeAndTea.jar"]

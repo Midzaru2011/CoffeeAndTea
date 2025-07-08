@@ -1,0 +1,15 @@
+[Unit]
+Description=Coffee and Tea Application
+After=network.target nginx.service
+Wants=nginx.service
+
+[Service]
+WorkingDirectory=/home/zag1988/projects/CoffeeAndTea
+ExecStart=/home/zag1988/projects/CoffeeAndTea/bin/start.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
